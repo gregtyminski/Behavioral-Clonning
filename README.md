@@ -4,11 +4,102 @@
 
 Overview
 ---
-This repository contains starting files for the Behavioral Cloning Project.
 
-In this project, you will use what you've learned about deep neural networks and convolutional neural networks to clone driving behavior. You will train, validate and test a model using Keras. The model will output a steering angle to an autonomous vehicle.
+[//]: # (Image References)
 
-We have provided a simulator where you can steer a car around a track for data collection. You'll use image data and steering angles to train a neural network and then use this model to drive the car autonomously around the track.
+[ds-udacity-non-balanced]: ./examples/ds-udacity-non-balanced.png "Udacity dataset non-balanced"
+[ds-udacity-balanced]: ./examples/ds-udacity-balanced.png "Udacity dataset balanced"
+[ds-my-non-balanced]: ./examples/ds-my-non-balanced.png "Own dataset non-balanced"
+[ds-my-balanced]: ./examples/ds-my-balanced.png "Own dataset balanced"
+
+The point of this project to train deep neural network to clone driving behavior. Trained model outputs a steering angle to an autonomous vehicle based on the view from camera.
+
+The simulator for steering a car around a track for data collection and for model verification is provided and available from [here](https://github.com/udacity/self-driving-car-sim).
+
+
+# Environment preparation
+
+This is actually the most difficult part of the project. The Simulator provided by Udacity is outdated and makes lots of troubles.
+
+To be able to use simulator:
+
+* download and install [Unity](https://unity.com/)
+* install [git-lfs](https://help.github.com/en/github/managing-large-files/installing-git-large-file-storage)
+* use `git lfs clone` command to download [simulator code](https://github.com/udacity/self-driving-car-sim).
+* open a [Assets/Standard Assets/Cameras/Scripts/TargetFieldOfView.cs](https://github.com/udacity/self-driving-car-sim/blob/master/Assets/Standard%20Assets/Cameras/Scripts/TargetFieldOfView.cs#L62) file in any text editor and replace line 62:
+
+```python
+if (!((r is TrailRenderer) || (r is ParticleRenderer) || (r is ParticleSystemRenderer)))
+```
+
+to the file
+
+```python
+if (!((r is TrailRenderer) || (r is ParticleSystemRenderer)))
+```
+
+... or in another words, remove the `(r is ParticleRenderer) ||` part, as this causes troubles.
+* next, using `pip` install `python-socketio` library (__don't install `socketio`__) and also `eventlet` library.<br />
+This operation crashed my conda environment with Python 3.7 twice. After the project is passed, I'll have to reinstall conda from scratch.<br />
+If you try to run `drive.py` script provided for this project it will fail with the message:<br />
+`AttributeError: module 'importlib._bootstrap' has no attribute 'SourceFileLoader'`<br />
+Next step corrects that temporarily.
+* open the `%python_path%/python3.7/site-packages/pkg_resources.py` with any text editor and add following code in line 75:<br />
+
+```python
+importlib_bootstrap = None
+```
+
+# Dataset
+I pretrained my network with the dataset provided by Udacity.<br />
+Next I trained with my own data.
+
+### Dataset provided by Udacity
+
+#### Udacity's non-balanced dataset
+The dataset from Udacity has following stats:<br />
+![alt text][ds-udacity-non-balanced]
+This clearly shows, that most of the time the car was driving straight:<br />
+
+* values 0.0 are for images from center camera
+* values 0.2 are for images from left camera
+* values -0.2 are for images from right camera
+
+Such data could lead to getting the model being able mostly to drive ahead.<br />
+
+#### Udacity's balanced dataset
+
+To overcome this balancing the dataset is necessary. This is implemented in `DataGenerator.balance_dataset()`. This method drop random 90% of entries in steering ranges `(-0.22, -0.18)`, `(0.18, 0.22)` and `(-0.01, 0.01)`.<br />
+![alt text][ds-udacity-balanced]
+
+
+### My dataset
+To be able to train meaningful model I suggest to record at least 2-3 laps in each direction. While recording, steering is very important. You can control your car with keys _A,S,D,W_ or _UP, LEFT, DOWN, RIGHT, UP_ arrows. However you can control the car with the mouse as well. I suggest using the mouse. While using keys, steering is not smooth. In contradiction you can turn slightly, constantly and steady with a mouse. This will allow the model to train smoothly.<br />
+My dataset contains:
+
+#### My non-balanced dataset
+Dataset recorded by me has following stats:<br />
+![alt text][ds-my-non-balanced]
+
+It's pretty balanced, but not fully. It still has peaks, which are not welcome.
+
+#### My balanced dataset
+Running same method `DataGenerator.balance_dataset()` to balance dataset gave following result:<br />
+![alt text][ds-my-balanced]
+
+
+# Build model
+
+The model I have proposed after 
+
+# Train
+
+# Verify
+
+# Potential improvements
+ 
+---
+
 
 We also want you to create a detailed writeup of the project. Check out the [writeup template](https://github.com/udacity/CarND-Behavioral-Cloning-P3/blob/master/writeup_template.md) for this project and use it as a starting point for creating your own writeup. The writeup can be either a markdown file or a pdf document.
 
@@ -21,105 +112,10 @@ To meet specifications, the project will require submitting five files:
 
 This README file describes how to output the video in the "Details About Files In This Directory" section.
 
-Creating a Great Writeup
+# Solution Writeup
 ---
-A great writeup should include the [rubric points](https://review.udacity.com/#!/rubrics/432/view) as well as your description of how you addressed each point.  You should include a detailed description of the code used (with line-number references and code snippets where necessary), and links to other supporting documents or external references.  You should include images in your writeup to demonstrate how your code works with examples.  
+The code uses Keras API in TensorFlow.
 
-All that said, please be concise!  We're not looking for you to write a book here, just a brief description of how you passed each rubric point, and references to the relevant code :). 
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup.
-
-The Project
----
-The goals / steps of this project are the following:
-* Use the simulator to collect data of good driving behavior 
-* Design, train and validate a model that predicts a steering angle from image data
-* Use the model to drive the vehicle autonomously around the first track in the simulator. The vehicle should remain on the road for an entire loop around the track.
-* Summarize the results with a written report
-
-### Dependencies
-This lab requires:
-
-* [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit)
-
-The lab enviroment can be created with CarND Term1 Starter Kit. Click [here](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) for the details.
-
-The following resources can be found in this github repository:
-* drive.py
-* video.py
-* writeup_template.md
-
-The simulator can be downloaded from the classroom. In the classroom, we have also provided sample data that you can optionally use to help train your model.
-
-## Details About Files In This Directory
-
-### `drive.py`
-
-Usage of `drive.py` requires you have saved the trained model as an h5 file, i.e. `model.h5`. See the [Keras documentation](https://keras.io/getting-started/faq/#how-can-i-save-a-keras-model) for how to create this file using the following command:
-```sh
-model.save(filepath)
-```
-
-Once the model has been saved, it can be used with drive.py using this command:
-
-```sh
-python drive.py model.h5
-```
-
-The above command will load the trained model and use the model to make predictions on individual images in real-time and send the predicted angle back to the server via a websocket connection.
-
-Note: There is known local system's setting issue with replacing "," with "." when using drive.py. When this happens it can make predicted steering values clipped to max/min values. If this occurs, a known fix for this is to add "export LANG=en_US.utf8" to the bashrc file.
-
-#### Saving a video of the autonomous agent
-
-```sh
-python drive.py model.h5 run1
-```
-
-The fourth argument, `run1`, is the directory in which to save the images seen by the agent. If the directory already exists, it'll be overwritten.
-
-```sh
-ls run1
-
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_424.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_451.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_477.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_528.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_573.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_618.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_697.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_723.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_749.jpg
-[2017-01-09 16:10:23 EST]  12KiB 2017_01_09_21_10_23_817.jpg
-...
-```
-
-The image file name is a timestamp of when the image was seen. This information is used by `video.py` to create a chronological video of the agent driving.
-
-### `video.py`
-
-```sh
-python video.py run1
-```
-
-Creates a video based on images found in the `run1` directory. The name of the video will be the name of the directory followed by `'.mp4'`, so, in this case the video will be `run1.mp4`.
-
-Optionally, one can specify the FPS (frames per second) of the video:
-
-```sh
-python video.py run1 --fps 48
-```
-
-Will run the video at 48 FPS. The default FPS is 60.
-
-#### Why create a video
-
-1. It's been noted the simulator might perform differently based on the hardware. So if your model drives succesfully on your machine it might not on another machine (your reviewer). Saving a video is a solid backup in case this happens.
-2. You could slightly alter the code in `drive.py` and/or `video.py` to create a video of what your model sees after the image is processed (may be helpful for debugging).
-
-### Tips
-- Please keep in mind that training images are loaded in BGR colorspace using cv2 while drive.py load images in RGB to predict the steering angles.
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+## Prepare model
+In first step we are going to prepare model for training.
 
